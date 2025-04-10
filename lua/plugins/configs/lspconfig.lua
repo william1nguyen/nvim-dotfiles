@@ -3,6 +3,7 @@ require "nvchad.lsp"
 
 local M = {}
 local utils = require "core.utils"
+local lspconfig = require("lspconfig")
 
 -- export on_attach & capabilities for custom lspconfigs
 M.on_attach = function(client, bufnr)
@@ -40,7 +41,7 @@ M.capabilities.textDocument.completion.completionItem = {
   },
 }
 
-require("lspconfig").lua_ls.setup {
+lspconfig.lua_ls.setup {
   on_init = M.on_init,
   on_attach = M.on_attach,
   capabilities = M.capabilities,
@@ -63,5 +64,28 @@ require("lspconfig").lua_ls.setup {
     },
   },
 }
+
+lspconfig.gopls.setup({
+    on_attach = function(client, bufnr)
+        client.server_capabilities.documentFormattingProvider = false
+        client.server_capabilities.documentRangeFormattingProvider = false
+        M.on_attach(client, bufnr)
+    end,
+    on_init = M.on_init,
+    capabilities = M.capabilities,
+    cmd = { "gopls" },
+    filetypes = { "go", "gomod", "gotmpl", "gowork" },
+    root_dir = lspconfig.util.root_pattern("go.work", "go.mod", ".git"),
+    settings = {
+        gopls = {
+            analyses = {
+                unusedparams = true,
+            },
+            completeUnimported = true,
+            usePlaceholders = true,
+            staticcheck = true,
+        },
+    },
+})
 
 return M
